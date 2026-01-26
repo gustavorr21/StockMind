@@ -1,13 +1,18 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using StackExchange.Redis;
+using StockMind.Application.Interfaces;
 using StockMind.Domain.Repositories;
 using StockMind.Infrastructure.Caching;
+using StockMind.Infrastructure.Identity;
 using StockMind.Infrastructure.Messaging;
 using StockMind.Infrastructure.Messaging.RabbitMQ;
 using StockMind.Infrastructure.Persistence;
 using StockMind.Infrastructure.Persistence.Repositories;
+using StockMind.Infrastructure.Services;
 
 namespace StockMind.Infrastructure.Extensions;
 
@@ -21,6 +26,27 @@ public static class ServiceCollectionExtensions
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
+        // Identity
+        services.AddIdentityCore<ApplicationUser>(options =>
+        {
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 6;
+
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddRoles<IdentityRole<Guid>>()
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(
+            TokenOptions.DefaultProvider);
+
+
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -30,6 +56,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+
+        // Authentication Services
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IAuthService, AuthService>();
 
         // Redis Cache (optional - will fail gracefully if not available)
         try

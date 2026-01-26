@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMind.Application.Commands.Stock;
 using StockMind.Application.Queries.Stock;
@@ -7,6 +8,7 @@ namespace StockMind.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // Require authentication for all endpoints
 public class StockController : BaseController
 {
     private readonly IMediator _mediator;
@@ -17,6 +19,7 @@ public class StockController : BaseController
     }
 
     [HttpGet("product/{productId:guid}")]
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")] // All roles can view
     public async Task<IActionResult> GetByProductId(Guid productId)
     {
         var query = new GetStockByProductIdQuery(productId);
@@ -29,6 +32,7 @@ public class StockController : BaseController
     }
 
     [HttpGet("low-stock")]
+    [Authorize(Roles = "Admin,Manager,Operator")] // Viewer cannot see alerts
     public async Task<IActionResult> GetLowStock()
     {
         var query = new GetLowStockProductsQuery();
@@ -41,6 +45,7 @@ public class StockController : BaseController
     }
 
     [HttpPost("add")]
+    [Authorize(Roles = "Admin,Manager,Operator")] // Only Admin, Manager and Operator can add stock
     public async Task<IActionResult> AddStock([FromBody] AddStockCommand command)
     {
         var result = await _mediator.Send(command);
@@ -52,6 +57,7 @@ public class StockController : BaseController
     }
 
     [HttpPost("remove")]
+    [Authorize(Roles = "Admin,Manager,Operator")] // Only Admin, Manager and Operator can remove stock
     public async Task<IActionResult> RemoveStock([FromBody] RemoveStockCommand command)
     {
         var result = await _mediator.Send(command);
@@ -63,6 +69,7 @@ public class StockController : BaseController
     }
 
     [HttpPost("adjust")]
+    [Authorize(Roles = "Admin,Manager")] // Only Admin and Manager can adjust stock
     public async Task<IActionResult> AdjustStock([FromBody] AdjustStockCommand command)
     {
         var result = await _mediator.Send(command);
