@@ -15,6 +15,17 @@ public sealed class Supplier : BaseEntity
     public SupplierStatus Status { get; private set; }
     public string? Notes { get; private set; }
 
+    // EF Core constructor
+    private Supplier()
+    {
+        CompanyName = string.Empty;
+        TradeName = string.Empty;
+        Document = string.Empty;
+        Email = null!;
+        Phone = null!;
+        Address = null!;
+    }
+
     private Supplier(string companyName, string tradeName, string document, Email email, Phone phone, Address address)
     {
         CompanyName = companyName;

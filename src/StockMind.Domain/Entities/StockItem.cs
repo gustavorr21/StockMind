@@ -14,6 +14,11 @@ public sealed class StockItem : AggregateRoot
     // Navigation property
     public Product? Product { get; private set; }
 
+    // EF Core constructor
+    private StockItem()
+    {
+    }
+
     private StockItem(Guid productId, int initialQuantity, string? location)
     {
         ProductId = productId;

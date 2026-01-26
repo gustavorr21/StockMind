@@ -23,6 +23,16 @@ public sealed class Product : AggregateRoot
     public Category? Category { get; private set; }
     public Supplier? Supplier { get; private set; }
 
+    // EF Core constructor
+    private Product()
+    {
+        Name = string.Empty;
+        Description = string.Empty;
+        Sku = string.Empty;
+        Price = null!;
+        CostPrice = null!;
+    }
+
     private Product(string name, string description, string sku, Money price, Money costPrice, Guid categoryId, int minimumStock)
     {
         Name = name;
