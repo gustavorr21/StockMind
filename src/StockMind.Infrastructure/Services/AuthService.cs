@@ -75,7 +75,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<Result<AuthResponseDto>> RegisterAsync(string email, string password, string fullName, string role, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponseDto>> RegisterAsync(string email, string password, string fullName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -100,12 +100,12 @@ public class AuthService : IAuthService
                 return Result<AuthResponseDto>.Failure($"Registration failed: {errors}");
             }
 
-            // Add role
-            var addRoleResult = await _userManager.AddToRoleAsync(user, role);
+            // Add default role "Viewer" for new users
+            var addRoleResult = await _userManager.AddToRoleAsync(user, "Viewer");
             if (!addRoleResult.Succeeded)
             {
                 await _userManager.DeleteAsync(user); // Rollback
-                return Result<AuthResponseDto>.Failure("Failed to assign role");
+                return Result<AuthResponseDto>.Failure("Failed to assign default role");
             }
 
             // Generate tokens

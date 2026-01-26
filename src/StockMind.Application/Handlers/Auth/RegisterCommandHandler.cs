@@ -20,7 +20,6 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, Result<Au
             request.Email,
             request.Password,
             request.FullName,
-            request.Role,
             cancellationToken
         );
     }

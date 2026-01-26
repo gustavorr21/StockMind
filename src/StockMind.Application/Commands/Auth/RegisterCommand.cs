@@ -6,6 +6,5 @@ namespace StockMind.Application.Commands.Auth;
 public sealed record RegisterCommand(
     string Email,
     string Password,
-    string FullName,
-    string Role
+    string FullName
 ) : ICommand<Result<AuthResponseDto>>;

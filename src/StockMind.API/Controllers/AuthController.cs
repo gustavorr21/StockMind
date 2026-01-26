@@ -41,7 +41,7 @@ public class AuthController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
-        var command = new RegisterCommand(request.Email, request.Password, request.FullName, request.Role);
+        var command = new RegisterCommand(request.Email, request.Password, request.FullName);
         var result = await _mediator.Send(command);
 
         if (!result.IsSuccess)
@@ -103,4 +103,22 @@ public class AuthController : BaseController
             roles
         });
     }
+
+    /// <summary>
+    /// Change user role (Admin only)
+    /// </summary>
+    [HttpPut("users/{userId:guid}/role")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ChangeUserRole(Guid userId, [FromBody] ChangeUserRoleRequest request)
+    {
+        var command = new ChangeUserRoleCommand(userId, request.NewRole);
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(new { message = "User role updated successfully" });
+    }
 }
+
+public record ChangeUserRoleRequest(string NewRole);

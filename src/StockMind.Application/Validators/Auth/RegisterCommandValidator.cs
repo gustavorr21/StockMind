@@ -18,10 +18,5 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(x => x.FullName)
             .NotEmpty().WithMessage("Full name is required")
             .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters");
-
-        RuleFor(x => x.Role)
-            .NotEmpty().WithMessage("Role is required")
-            .Must(role => new[] { "Admin", "Manager", "Operator", "Viewer" }.Contains(role))
-            .WithMessage("Role must be one of: Admin, Manager, Operator, Viewer");
     }
 }
