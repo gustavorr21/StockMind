@@ -49,7 +49,9 @@ Content-Type: application/json
 }
 ```
 
-**Valid roles:** Admin, Manager, Operator, Viewer
+**Valid roles (case-insensitive):** Admin, Manager, Operator, Viewer
+
+**Note:** Roles are now type-safe using the `UserRole` enum instead of strings.
 
 ### 4. Files Modified
 

@@ -20,7 +20,7 @@ public static class DataSeeder
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole<Guid>> roleManager)
     {
-        string[] roleNames = { "Admin", "Manager", "Operator", "Viewer" };
+        var roleNames = Enum.GetNames<StockMind.Domain.Enums.UserRole>();
 
         foreach (var roleName in roleNames)
         {
@@ -58,7 +58,7 @@ public static class DataSeeder
 
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                await userManager.AddToRoleAsync(adminUser, StockMind.Domain.Enums.UserRole.Admin.ToString());
             }
         }
     }

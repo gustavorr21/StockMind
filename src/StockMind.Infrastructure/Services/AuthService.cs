@@ -101,7 +101,7 @@ public class AuthService : IAuthService
             }
 
             // Add default role "Viewer" for new users
-            var addRoleResult = await _userManager.AddToRoleAsync(user, "Viewer");
+            var addRoleResult = await _userManager.AddToRoleAsync(user, StockMind.Domain.Enums.UserRole.Viewer.ToString());
             if (!addRoleResult.Succeeded)
             {
                 await _userManager.DeleteAsync(user); // Rollback

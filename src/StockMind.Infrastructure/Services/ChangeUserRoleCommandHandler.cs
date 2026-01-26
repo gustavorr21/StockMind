@@ -24,13 +24,6 @@ public class ChangeUserRoleCommandHandler : ICommandHandler<ChangeUserRoleComman
                 return Result<bool>.Failure("User not found");
             }
 
-            // Validate role
-            string[] validRoles = { "Admin", "Manager", "Operator", "Viewer" };
-            if (!validRoles.Contains(request.NewRole))
-            {
-                return Result<bool>.Failure($"Invalid role. Valid roles are: {string.Join(", ", validRoles)}");
-            }
-
             // Remove all existing roles
             var currentRoles = await _userManager.GetRolesAsync(user);
             if (currentRoles.Any())
@@ -43,7 +36,7 @@ public class ChangeUserRoleCommandHandler : ICommandHandler<ChangeUserRoleComman
             }
 
             // Add new role
-            var addResult = await _userManager.AddToRoleAsync(user, request.NewRole);
+            var addResult = await _userManager.AddToRoleAsync(user, request.NewRole.ToString());
             if (!addResult.Succeeded)
             {
                 return Result<bool>.Failure("Failed to assign new role");

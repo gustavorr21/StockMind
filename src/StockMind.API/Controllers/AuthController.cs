@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMind.Application.Commands.Auth;
 using StockMind.Application.DTOs.Auth;
+using StockMind.Domain.Enums;
 using System.Security.Claims;
 
 namespace StockMind.API.Controllers;
@@ -121,4 +122,4 @@ public class AuthController : BaseController
     }
 }
 
-public record ChangeUserRoleRequest(string NewRole);
+public record ChangeUserRoleRequest(UserRole NewRole);
