@@ -1,3 +1,5 @@
+using StockMind.Domain.Enums;
+
 namespace StockMind.Application.DTOs;
 
 public sealed record ProductDto
@@ -11,7 +13,7 @@ public sealed record ProductDto
     public string PriceCurrency { get; init; } = string.Empty;
     public decimal CostPriceAmount { get; init; }
     public string CostPriceCurrency { get; init; } = string.Empty;
-    public string Status { get; init; } = string.Empty;
+    public ProductStatus Status { get; init; }
     public Guid CategoryId { get; init; }
     public string? CategoryName { get; init; }
     public Guid? SupplierId { get; init; }
@@ -21,3 +23,4 @@ public sealed record ProductDto
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
 }
+

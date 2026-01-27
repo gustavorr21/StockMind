@@ -31,7 +31,7 @@ public class GetAllProductsQueryHandler : IQueryHandler<GetAllProductsQuery, Res
                 PriceCurrency = product.Price.Currency,
                 CostPriceAmount = product.CostPrice.Amount,
                 CostPriceCurrency = product.CostPrice.Currency,
-                Status = product.Status.ToString(),
+                    Status = product.Status,
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category?.Name,
                 SupplierId = product.SupplierId,

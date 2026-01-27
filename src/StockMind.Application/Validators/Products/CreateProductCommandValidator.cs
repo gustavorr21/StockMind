@@ -13,13 +13,18 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
         RuleFor(x => x.Sku)
             .NotEmpty().WithMessage("SKU is required")
-            .MaximumLength(50).WithMessage("SKU cannot exceed 50 characters");
+            .MaximumLength(50).WithMessage("SKU cannot exceed 50 characters")
+            .Matches("^[A-Z0-9-]+$").WithMessage("SKU must contain only uppercase letters, numbers, and hyphens");
 
         RuleFor(x => x.PriceAmount)
             .GreaterThanOrEqualTo(0).WithMessage("Price cannot be negative");
 
         RuleFor(x => x.CostPriceAmount)
             .GreaterThanOrEqualTo(0).WithMessage("Cost price cannot be negative");
+
+        RuleFor(x => x)
+            .Must(x => x.PriceAmount >= x.CostPriceAmount)
+            .WithMessage("Sale price must be greater than or equal to cost price");
 
         RuleFor(x => x.PriceCurrency)
             .NotEmpty().WithMessage("Price currency is required")
@@ -41,6 +46,17 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
         RuleFor(x => x.ImageUrl)
             .MaximumLength(500).WithMessage("Image URL cannot exceed 500 characters")
+            .Must(BeAValidUrl).WithMessage("Image URL must be a valid URL")
             .When(x => !string.IsNullOrWhiteSpace(x.ImageUrl));
     }
+
+    private bool BeAValidUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return true;
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult)
+            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
 }
+
