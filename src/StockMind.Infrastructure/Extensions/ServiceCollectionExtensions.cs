@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
         // Authentication Services
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IMenuService, MenuService>();
 
         // Redis Cache (optional - will fail gracefully if not available)
         try
