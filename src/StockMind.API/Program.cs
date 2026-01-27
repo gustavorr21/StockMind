@@ -9,6 +9,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel to use development certificate
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.ConfigureKestrel(serverOptions =>
+    {
+        serverOptions.ConfigureHttpsDefaults(httpsOptions =>
+        {
+            httpsOptions.AllowAnyClientCertificate();
+        });
+    });
+}
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -96,21 +108,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed database with roles and admin user
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var services = scope.ServiceProvider;
-        await DataSeeder.SeedAsync(services);
-        Log.Information("Database seeded successfully");
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "An error occurred while seeding the database");
-    }
-}
-
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -129,16 +126,34 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Seed database with roles and admin user
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var services = scope.ServiceProvider;
+        await DataSeeder.SeedAsync(services);
+        Log.Information("Database seeded successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while seeding the database");
+        throw; // Re-throw to prevent app from running with bad data
+    }
+}
+
 try
 {
     Log.Information("Starting StockMind API");
-    app.Run();
+    await app.RunAsync();
+    Log.Information("StockMind API stopped gracefully");
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
