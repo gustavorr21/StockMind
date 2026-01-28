@@ -3,18 +3,16 @@ using StockMind.Application.Commands.Products;
 
 namespace StockMind.Application.Validators.Products;
 
-public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
+public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
 {
-    public CreateProductCommandValidator()
+    public UpdateProductCommandValidator()
     {
+        RuleFor(x => x.Id)
+            .NotEmpty().WithMessage("Product ID is required");
+
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Product name is required")
             .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters");
-
-        RuleFor(x => x.Sku)
-            .NotEmpty().WithMessage("SKU is required")
-            .MaximumLength(50).WithMessage("SKU cannot exceed 50 characters")
-            .Matches("^[A-Z0-9-]+$").WithMessage("SKU must contain only uppercase letters, numbers, and hyphens");
 
         RuleFor(x => x.PriceAmount)
             .GreaterThanOrEqualTo(0).WithMessage("Price cannot be negative");
@@ -64,4 +62,3 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }
-

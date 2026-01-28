@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StockMind.Application.Commands.Products;
 using StockMind.Application.Queries.Products;
+using StockMind.Application.Interfaces;
 using StockMind.Domain.Enums;
 
 namespace StockMind.API.Controllers;
@@ -13,10 +14,12 @@ namespace StockMind.API.Controllers;
 public class ProductsController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly IFileStorageService _fileStorageService;
 
-    public ProductsController(IMediator mediator)
+    public ProductsController(IMediator mediator, IFileStorageService fileStorageService)
     {
         _mediator = mediator;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -143,6 +146,47 @@ public class ProductsController : BaseController
             return BadRequest(new { error = result.Error });
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Upload product image
+    /// </summary>
+    [HttpPost("upload-image")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UploadImage(IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { error = "No file uploaded" });
+            }
+
+            // Validate content type
+            var allowedContentTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+            if (!allowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+            {
+                return BadRequest(new { error = "Invalid file type. Allowed types: JPEG, PNG, GIF, WEBP" });
+            }
+
+            using var stream = file.OpenReadStream();
+            var imageUrl = await _fileStorageService.UploadFileAsync(
+                stream,
+                file.FileName,
+                file.ContentType,
+                HttpContext.RequestAborted
+            );
+
+            return Ok(new { imageUrl });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"Error uploading image: {ex.Message}" });
+        }
     }
 }
 

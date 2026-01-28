@@ -151,7 +151,7 @@ public class MenuService : IMenuService
                         Id = "products-list",
                         Title = "All Products",
                         Icon = "list",
-                        Route = "/products",
+                        Route = "/dashboard/products",
                         Order = 1,
                         RequiredPermissions = new[] { Permission.ProductsView }
                     },
@@ -160,7 +160,7 @@ public class MenuService : IMenuService
                         Id = "products-create",
                         Title = "Add Product",
                         Icon = "add_circle",
-                        Route = "/products/create",
+                        Route = "/dashboard/products/create",
                         Order = 2,
                         RequiredPermissions = new[] { Permission.ProductsCreate }
                     },
@@ -169,7 +169,7 @@ public class MenuService : IMenuService
                         Id = "categories",
                         Title = "Categories",
                         Icon = "category",
-                        Route = "/categories",
+                        Route = "/dashboard/categories",
                         Order = 3,
                         RequiredPermissions = new[] { Permission.CategoriesView }
                     }
@@ -191,7 +191,7 @@ public class MenuService : IMenuService
                         Id = "stock-overview",
                         Title = "Stock Overview",
                         Icon = "inventory",
-                        Route = "/stock",
+                        Route = "/dashboard/stock",
                         Order = 1,
                         RequiredPermissions = new[] { Permission.StockView }
                     },
@@ -200,7 +200,7 @@ public class MenuService : IMenuService
                         Id = "stock-add",
                         Title = "Add Stock",
                         Icon = "add_box",
-                        Route = "/stock/add",
+                        Route = "/dashboard/stock/add",
                         Order = 2,
                         RequiredPermissions = new[] { Permission.StockAdd }
                     },
@@ -209,7 +209,7 @@ public class MenuService : IMenuService
                         Id = "stock-remove",
                         Title = "Remove Stock",
                         Icon = "remove_circle",
-                        Route = "/stock/remove",
+                        Route = "/dashboard/stock/remove",
                         Order = 3,
                         RequiredPermissions = new[] { Permission.StockRemove }
                     },
@@ -218,7 +218,7 @@ public class MenuService : IMenuService
                         Id = "stock-adjust",
                         Title = "Adjust Stock",
                         Icon = "tune",
-                        Route = "/stock/adjust",
+                        Route = "/dashboard/stock/adjust",
                         Order = 4,
                         RequiredPermissions = new[] { Permission.StockAdjust }
                     },
@@ -227,7 +227,7 @@ public class MenuService : IMenuService
                         Id = "stock-movements",
                         Title = "Stock Movements",
                         Icon = "swap_horiz",
-                        Route = "/stock/movements",
+                        Route = "/dashboard/stock/movements",
                         Order = 5,
                         RequiredPermissions = new[] { Permission.ReportsMovements }
                     }
@@ -249,7 +249,7 @@ public class MenuService : IMenuService
                         Id = "reports-low-stock",
                         Title = "Low Stock Alert",
                         Icon = "warning",
-                        Route = "/reports/low-stock",
+                        Route = "/dashboard/reports/low-stock",
                         Order = 1,
                         RequiredPermissions = new[] { Permission.ReportsLowStock }
                     },
@@ -258,7 +258,7 @@ public class MenuService : IMenuService
                         Id = "reports-movements",
                         Title = "Stock Movements",
                         Icon = "timeline",
-                        Route = "/reports/movements",
+                        Route = "/dashboard/reports/movements",
                         Order = 2,
                         RequiredPermissions = new[] { Permission.ReportsMovements }
                     }

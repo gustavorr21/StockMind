@@ -1,6 +1,6 @@
-# Products & Stock Management - Frontend Integration Guide
+﻿# Products & Stock Management - Frontend Integration Guide
 
-## ?? �ndice
+## 📋 Índice
 1. [Products API](#products-api)
 2. [Stock API](#stock-api)
 3. [TypeScript Models](#typescript-models)
@@ -9,7 +9,7 @@
 
 ---
 
-## ?? **PRODUCTS API**
+## 📦 **PRODUCTS API**
 
 ### **Base URL**
 ```
@@ -18,7 +18,7 @@ https://localhost:7001/api/products
 
 ### **Endpoints**
 
-#### 1. Search Products (with Pagination) ? **NEW**
+#### 1. Search Products (with Pagination) ⭐ **NEW**
 ```http
 GET /api/products/search?searchTerm=notebook&page=1&pageSize=20
 Authorization: Bearer {token}
@@ -175,7 +175,7 @@ Response 404: { "error": "Product not found" }
 Permissions: Admin, Manager
 ```
 
-#### 7. Delete Product (Soft Delete) ? **NEW**
+#### 7. Delete Product (Soft Delete) ⭐ **NEW**
 ```http
 DELETE /api/products/{id}
 Authorization: Bearer {token}
@@ -191,7 +191,7 @@ Permissions: Admin, Manager
 
 ---
 
-## ?? **STOCK API**
+## 📊 **STOCK API**
 
 ### **Base URL**
 ```
@@ -268,7 +268,7 @@ Errors:
 Permissions: Admin, Manager, Operator
 ```
 
-#### 4. Remove Stock (Sa�da)
+#### 4. Remove Stock (Saída)
 ```http
 POST /api/stock/remove
 Authorization: Bearer {token}
@@ -298,7 +298,7 @@ Errors:
 Permissions: Admin, Manager, Operator
 ```
 
-#### 5. Adjust Stock (Ajuste/Invent�rio)
+#### 5. Adjust Stock (Ajuste/Inventário)
 ```http
 POST /api/stock/adjust
 Authorization: Bearer {token}
@@ -330,7 +330,7 @@ Permissions: Admin, Manager
 
 ---
 
-## ?? **TypeScript Models**
+## 🎨 **TypeScript Models**
 
 ### **Products**
 ```typescript
@@ -454,413 +454,35 @@ export interface StockOperationResponse {
 
 ---
 
-## ?? **Angular Services**
-
-### **Product Service**
-```typescript
-// product.service.ts
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '@environments/environment';
-import {
-  Product,
-  CreateProductRequest,
-  UpdateProductRequest,
-  ProductSearchParams,
-  PagedResult
-} from '@core/models/product.models';
-
-@Injectable({ providedIn: 'root' })
-export class ProductService {
-  private apiUrl = `${environment.apiUrl}/products`;
-
-  constructor(private http: HttpClient) {}
-
-  search(params: ProductSearchParams): Observable<PagedResult<Product>> {
-    let httpParams = new HttpParams();
-
-    if (params.searchTerm) httpParams = httpParams.set('searchTerm', params.searchTerm);
-    if (params.categoryId) httpParams = httpParams.set('categoryId', params.categoryId);
-    if (params.supplierId) httpParams = httpParams.set('supplierId', params.supplierId);
-    if (params.status) httpParams = httpParams.set('status', params.status);
-    if (params.minPrice) httpParams = httpParams.set('minPrice', params.minPrice.toString());
-    if (params.maxPrice) httpParams = httpParams.set('maxPrice', params.maxPrice.toString());
-    if (params.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params.pageSize) httpParams = httpParams.set('pageSize', params.pageSize.toString());
-    if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
-    if (params.sortOrder) httpParams = httpParams.set('sortOrder', params.sortOrder);
-
-    return this.http.get<PagedResult<Product>>(`${this.apiUrl}/search`, { params: httpParams });
-  }
-
-  getAll(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.apiUrl);
-  }
-
-  getById(id: string): Observable<Product> {
-    return this.http.get<Product>(`${this.apiUrl}/${id}`);
-  }
-
-  getBySku(sku: string): Observable<Product> {
-    return this.http.get<Product>(`${this.apiUrl}/sku/${sku}`);
-  }
-
-  create(request: CreateProductRequest): Observable<{ id: string }> {
-    return this.http.post<{ id: string }>(this.apiUrl, request);
-  }
-
-  update(id: string, request: UpdateProductRequest): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${id}`, request);
-  }
-
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-}
-```
-
-### **Stock Service**
-```typescript
-// stock.service.ts
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '@environments/environment';
-import {
-  StockItem,
-  AddStockRequest,
-  RemoveStockRequest,
-  AdjustStockRequest,
-  StockOperationResponse
-} from '@core/models/stock.models';
-
-@Injectable({ providedIn: 'root' })
-export class StockService {
-  private apiUrl = `${environment.apiUrl}/stock`;
-
-  constructor(private http: HttpClient) {}
-
-  getByProductId(productId: string): Observable<StockItem> {
-    return this.http.get<StockItem>(`${this.apiUrl}/product/${productId}`);
-  }
-
-  getLowStock(): Observable<StockItem[]> {
-    return this.http.get<StockItem[]>(`${this.apiUrl}/low-stock`);
-  }
-
-  addStock(request: AddStockRequest): Observable<StockOperationResponse> {
-    return this.http.post<StockOperationResponse>(`${this.apiUrl}/add`, request);
-  }
-
-  removeStock(request: RemoveStockRequest): Observable<StockOperationResponse> {
-    return this.http.post<StockOperationResponse>(`${this.apiUrl}/remove`, request);
-  }
-
-  adjustStock(request: AdjustStockRequest): Observable<StockOperationResponse> {
-    return this.http.post<StockOperationResponse>(`${this.apiUrl}/adjust`, request);
-  }
-}
-```
-
----
-
-## ?? **Examples**
-
-### **1. Search Products with Pagination**
-```typescript
-// product-list.component.ts
-export class ProductListComponent implements OnInit {
-  products: Product[] = [];
-  totalCount = 0;
-  page = 1;
-  pageSize = 20;
-  searchTerm = '';
-
-  constructor(private productService: ProductService) {}
-
-  ngOnInit(): void {
-    this.loadProducts();
-  }
-
-  loadProducts(): void {
-    this.productService.search({
-      searchTerm: this.searchTerm,
-      page: this.page,
-      pageSize: this.pageSize,
-      sortBy: 'Name',
-      sortOrder: 'asc'
-    }).subscribe({
-      next: (result) => {
-        this.products = result.items;
-        this.totalCount = result.totalCount;
-      },
-      error: (error) => console.error('Error loading products', error)
-    });
-  }
-
-  onSearch(term: string): void {
-    this.searchTerm = term;
-    this.page = 1;
-    this.loadProducts();
-  }
-
-  onPageChange(page: number): void {
-    this.page = page;
-    this.loadProducts();
-  }
-}
-```
-
-### **2. Create Product**
-```typescript
-// product-form.component.ts
-export class ProductFormComponent {
-  productForm: FormGroup;
-
-  constructor(
-    private fb: FormBuilder,
-    private productService: ProductService,
-    private router: Router
-  ) {
-    this.productForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(200)]],
-      description: ['', Validators.required],
-      sku: ['', [Validators.required, Validators.pattern(/^[A-Z0-9-]+$/)]],
-      priceAmount: [0, [Validators.required, Validators.min(0)]],
-      priceCurrency: ['BRL', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
-      costPriceAmount: [0, [Validators.required, Validators.min(0)]],
-      costPriceCurrency: ['BRL', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
-      categoryId: ['', Validators.required],
-      supplierId: [''],
-      minimumStock: [0, [Validators.required, Validators.min(0)]],
-      barcode: [''],
-      imageUrl: ['']
-    });
-  }
-
-  onSubmit(): void {
-    if (this.productForm.valid) {
-      const request: CreateProductRequest = this.productForm.value;
-      
-      this.productService.create(request).subscribe({
-        next: (response) => {
-          console.log('Product created:', response.id);
-          this.router.navigate(['/products', response.id]);
-        },
-        error: (error) => {
-          console.error('Error creating product:', error.error.error);
-        }
-      });
-    }
-  }
-}
-```
-
-### **3. Delete Product**
-```typescript
-// product-detail.component.ts
-export class ProductDetailComponent {
-  product: Product;
-
-  constructor(
-    private productService: ProductService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private router: Router
-  ) {}
-
-  onDelete(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Delete Product',
-        message: 'Are you sure you want to delete this product? This action cannot be undone.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.productService.delete(this.product.id).subscribe({
-          next: () => {
-            this.snackBar.open('Product deleted successfully', 'Close', { duration: 3000 });
-            this.router.navigate(['/products']);
-          },
-          error: (error) => {
-            this.snackBar.open(error.error.error, 'Close', { duration: 5000 });
-          }
-        });
-      }
-    });
-  }
-}
-```
-
-### **4. Add Stock**
-```typescript
-// stock-add.component.ts
-export class StockAddComponent {
-  addStockForm: FormGroup;
-
-  constructor(
-    private fb: FormBuilder,
-    private stockService: StockService,
-    private snackBar: MatSnackBar
-  ) {
-    this.addStockForm = this.fb.group({
-      productId: ['', Validators.required],
-      quantity: [0, [Validators.required, Validators.min(1)]],
-      reference: [''],
-      notes: ['']
-    });
-  }
-
-  onSubmit(): void {
-    if (this.addStockForm.valid) {
-      const request: AddStockRequest = this.addStockForm.value;
-      
-      this.stockService.addStock(request).subscribe({
-        next: (response) => {
-          this.snackBar.open(response.message, 'Close', { duration: 3000 });
-          this.addStockForm.reset();
-        },
-        error: (error) => {
-          this.snackBar.open(error.error.error, 'Close', { duration: 5000 });
-        }
-      });
-    }
-  }
-}
-```
-
-### **5. Remove Stock**
-```typescript
-// stock-remove.component.ts
-export class StockRemoveComponent {
-  removeStockForm: FormGroup;
-  currentStock: StockItem;
-
-  constructor(
-    private fb: FormBuilder,
-    private stockService: StockService,
-    private snackBar: MatSnackBar
-  ) {
-    this.removeStockForm = this.fb.group({
-      productId: ['', Validators.required],
-      quantity: [0, [Validators.required, Validators.min(1)]],
-      reference: [''],
-      notes: ['']
-    });
-  }
-
-  onProductSelect(productId: string): void {
-    this.stockService.getByProductId(productId).subscribe({
-      next: (stock) => {
-        this.currentStock = stock;
-        // Update quantity validator to max available
-        this.removeStockForm.get('quantity')?.setValidators([
-          Validators.required,
-          Validators.min(1),
-          Validators.max(stock.availableQuantity)
-        ]);
-      }
-    });
-  }
-
-  onSubmit(): void {
-    if (this.removeStockForm.valid) {
-      const request: RemoveStockRequest = this.removeStockForm.value;
-      
-      this.stockService.removeStock(request).subscribe({
-        next: (response) => {
-          this.snackBar.open(response.message, 'Close', { duration: 3000 });
-          this.removeStockForm.reset();
-        },
-        error: (error) => {
-          this.snackBar.open(error.error.error, 'Close', { duration: 5000 });
-        }
-      });
-    }
-  }
-}
-```
-
-### **6. Low Stock Alert**
-```typescript
-// low-stock.component.ts
-export class LowStockComponent implements OnInit {
-  lowStockItems: StockItem[] = [];
-  loading = true;
-
-  constructor(private stockService: StockService) {}
-
-  ngOnInit(): void {
-    this.loadLowStock();
-  }
-
-  loadLowStock(): void {
-    this.stockService.getLowStock().subscribe({
-      next: (items) => {
-        this.lowStockItems = items;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading low stock', error);
-        this.loading = false;
-      }
-    });
-  }
-}
-```
-
----
-
-## ?? **Validation Rules Summary**
+## 🎯 **Validation Rules Summary**
 
 ### **Products**
 | Field | Required | Type | Validation |
 |-------|----------|------|------------|
-| name | ? | string | max 200 chars |
-| description | ? | string | - |
-| sku | ? | string | max 50, unique, uppercase/numbers/hyphens |
-| priceAmount | ? | number | >= 0, >= costPriceAmount |
-| priceCurrency | ? | string | exactly 3 chars |
-| costPriceAmount | ? | number | >= 0 |
-| categoryId | ? | GUID | must exist |
-| supplierId | ? | GUID | must exist if provided |
-| minimumStock | ? | number | >= 0 |
-| barcode | ? | string | max 50 chars |
-| imageUrl | ? | string | max 500 chars, valid URL |
+| name | ✅ | string | max 200 chars |
+| description | ✅ | string | - |
+| sku | ✅ | string | max 50, unique, uppercase/numbers/hyphens |
+| priceAmount | ✅ | number | >= 0, >= costPriceAmount |
+| priceCurrency | ✅ | string | exactly 3 chars |
+| costPriceAmount | ✅ | number | >= 0 |
+| categoryId | ✅ | GUID | must exist |
+| supplierId | ❌ | GUID | must exist if provided |
+| minimumStock | ✅ | number | >= 0 |
+| barcode | ❌ | string | max 50 chars |
+| imageUrl | ❌ | string | max 500 chars, valid URL |
 
 ### **Stock Operations**
 | Field | Required | Type | Validation |
 |-------|----------|------|------------|
-| productId | ? | GUID | must exist |
-| quantity (add/remove) | ? | number | > 0 |
-| newQuantity (adjust) | ? | number | >= 0, >= reservedQuantity |
-| reference | ? | string | max 100 chars |
-| notes | ? | string | max 500 chars |
+| productId | ✅ | GUID | must exist |
+| quantity (add/remove) | ✅ | number | > 0 |
+| newQuantity (adjust) | ✅ | number | >= 0, >= reservedQuantity |
+| reference | ❌ | string | max 100 chars |
+| notes | ❌ | string | max 500 chars |
 
 ---
 
-## ?? **Permissions Summary**
-
-| Action | Admin | Manager | Operator | Viewer |
-|--------|-------|---------|----------|--------|
-| **Products** |
-| View/Search | ? | ? | ? | ? |
-| Create | ? | ? | ? | ? |
-| Update | ? | ? | ? | ? |
-| Delete | ? | ? | ? | ? |
-| **Stock** |
-| View | ? | ? | ? | ? |
-| Add | ? | ? | ? | ? |
-| Remove | ? | ? | ? | ? |
-| Adjust | ? | ? | ? | ? |
-| Low Stock Alert | ? | ? | ? | ? |
-
----
-
-## ? **Testing Checklist**
+## ✅ **Testing Checklist**
 
 - [ ] Search products with different filters
 - [ ] Pagination (next/previous pages)
@@ -879,4 +501,4 @@ export class LowStockComponent implements OnInit {
 
 ---
 
-**?? Ready to integrate with Angular!**
+**🎉 Ready to integrate with Angular!**

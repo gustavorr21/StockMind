@@ -62,6 +62,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMenuService, MenuService>();
 
+        // File Storage Service
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
         // Redis Cache (optional - will fail gracefully if not available)
         try
         {

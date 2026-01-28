@@ -5,6 +5,7 @@ using StockMind.Application.Extensions;
 using StockMind.Infrastructure.Extensions;
 using StockMind.Infrastructure.Data;
 using StockMind.API.Middlewares;
+using StockMind.API.Converters;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,9 @@ builder.Services.AddControllers()
     {
         // Serialize enums as strings instead of numbers
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        
+        // Handle empty strings as null for nullable Guids
+        options.JsonSerializerOptions.Converters.Add(new NullableGuidConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -117,6 +121,9 @@ if (app.Environment.IsDevelopment())
 
 // Use custom exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// Enable serving static files (for uploaded images)
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
