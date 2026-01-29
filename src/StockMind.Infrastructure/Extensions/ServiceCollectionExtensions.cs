@@ -49,6 +49,9 @@ public static class ServiceCollectionExtensions
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        // HttpContextAccessor (for getting current user in handlers)
+        services.AddHttpContextAccessor();
 
         // Repositories
         services.AddScoped<IProductRepository, ProductRepository>();
@@ -67,6 +70,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IMenuService, MenuService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // File Storage Service
         services.AddScoped<IFileStorageService, LocalFileStorageService>();

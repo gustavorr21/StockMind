@@ -8,7 +8,7 @@ namespace StockMind.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // Require authentication for all endpoints
+[Authorize]
 public class StockController : BaseController
 {
     private readonly IMediator _mediator;
@@ -18,65 +18,120 @@ public class StockController : BaseController
         _mediator = mediator;
     }
 
-    [HttpGet("product/{productId:guid}")]
-    [Authorize(Roles = "Admin,Manager,Operator,Viewer")] // All roles can view
-    public async Task<IActionResult> GetByProductId(Guid productId)
+    /// <summary>
+    /// Get stock position by product and/or warehouse
+    /// </summary>
+    [HttpGet("position")]
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
+    public async Task<IActionResult> GetPosition(
+        [FromQuery] Guid? productId,
+        [FromQuery] Guid? warehouseId)
     {
-        var query = new GetStockByProductIdQuery(productId);
+        var query = new GetStockPositionQuery(productId, warehouseId);
         var result = await _mediator.Send(query);
 
         if (!result.IsSuccess)
-            return NotFound(new { error = result.Error });
+            return BadRequest(new { error = result.Error });
 
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Get stock movement history
+    /// </summary>
+    [HttpGet("movements")]
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
+    public async Task<IActionResult> GetMovements(
+        [FromQuery] Guid? productId,
+        [FromQuery] Guid? warehouseId,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
+    {
+        var query = new GetStockMovementHistoryQuery(productId, warehouseId, startDate, endDate);
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Add stock (entry)
+    /// </summary>
+    [HttpPost("entry")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> Entry([FromBody] StockEntryCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(new { movementId = result.Data, message = "Stock added successfully" });
+    }
+
+    /// <summary>
+    /// Remove stock (exit)
+    /// </summary>
+    [HttpPost("exit")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> Exit([FromBody] StockExitCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(new { movementId = result.Data, message = "Stock removed successfully" });
+    }
+
+    /// <summary>
+    /// Transfer stock between warehouses
+    /// </summary>
+    [HttpPost("transfer")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> Transfer([FromBody] StockTransferCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(new { movementId = result.Data, message = "Stock transferred successfully" });
+    }
+
+    /// <summary>
+    /// Get products with low stock
+    /// </summary>
     [HttpGet("low-stock")]
-    [Authorize(Roles = "Admin,Manager,Operator")] // Viewer cannot see alerts
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
     public async Task<IActionResult> GetLowStock()
     {
-        var query = new GetLowStockProductsQuery();
+        var query = new GetStockPositionQuery(null, null);
         var result = await _mediator.Send(query);
 
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error });
 
-        return Ok(result.Data);
+        var lowStock = result.Data?.Where(s => s.IsBelowMinimum).ToList();
+        return Ok(lowStock);
     }
 
-    [HttpPost("add")]
-    [Authorize(Roles = "Admin,Manager,Operator")] // Only Admin, Manager and Operator can add stock
-    public async Task<IActionResult> AddStock([FromBody] AddStockCommand command)
+    /// <summary>
+    /// Get products out of stock
+    /// </summary>
+    [HttpGet("out-of-stock")]
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
+    public async Task<IActionResult> GetOutOfStock()
     {
-        var result = await _mediator.Send(command);
+        var query = new GetStockPositionQuery(null, null);
+        var result = await _mediator.Send(query);
 
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error });
 
-        return Ok(new { success = true, message = "Stock added successfully" });
-    }
-
-    [HttpPost("remove")]
-    [Authorize(Roles = "Admin,Manager,Operator")] // Only Admin, Manager and Operator can remove stock
-    public async Task<IActionResult> RemoveStock([FromBody] RemoveStockCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error });
-
-        return Ok(new { success = true, message = "Stock removed successfully" });
-    }
-
-    [HttpPost("adjust")]
-    [Authorize(Roles = "Admin,Manager")] // Only Admin and Manager can adjust stock
-    public async Task<IActionResult> AdjustStock([FromBody] AdjustStockCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error });
-
-        return Ok(new { success = true, message = "Stock adjusted successfully" });
+        var outOfStock = result.Data?.Where(s => s.CurrentQuantity == 0).ToList();
+        return Ok(outOfStock);
     }
 }

@@ -1,9 +1,8 @@
-using Microsoft.AspNetCore.Http;
 using StockMind.Application.Commands.Stock;
 using StockMind.Application.Common;
+using StockMind.Application.Interfaces;
 using StockMind.Domain.Entities;
 using StockMind.Domain.Repositories;
-using System.Security.Claims;
 
 namespace StockMind.Application.Handlers.Stock;
 
@@ -14,7 +13,7 @@ public class StockEntryCommandHandler : ICommandHandler<StockEntryCommand, Resul
     private readonly IProductRepository _productRepository;
     private readonly IWarehouseRepository _warehouseRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public StockEntryCommandHandler(
         IStockRepository stockRepository,
@@ -22,14 +21,14 @@ public class StockEntryCommandHandler : ICommandHandler<StockEntryCommand, Resul
         IProductRepository productRepository,
         IWarehouseRepository warehouseRepository,
         IUnitOfWork unitOfWork,
-        IHttpContextAccessor httpContextAccessor)
+        ICurrentUserService currentUserService)
     {
         _stockRepository = stockRepository;
         _movementRepository = movementRepository;
         _productRepository = productRepository;
         _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
-        _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Guid>> Handle(StockEntryCommand request, CancellationToken cancellationToken)
@@ -37,8 +36,8 @@ public class StockEntryCommandHandler : ICommandHandler<StockEntryCommand, Resul
         try
         {
             // Get current user ID
-            var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            var userId = _currentUserService.UserId;
+            if (!userId.HasValue)
             {
                 return Result<Guid>.Failure("User not authenticated");
             }
@@ -81,7 +80,7 @@ public class StockEntryCommandHandler : ICommandHandler<StockEntryCommand, Resul
                 request.Origin,
                 request.Quantity,
                 previousBalance,
-                userId,
+                userId.Value,
                 request.Observation
             );
 
