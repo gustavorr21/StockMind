@@ -103,13 +103,13 @@ public class StockMovementRepository : IStockMovementRepository
         return entity;
     }
 
-    public Task<StockMovement> UpdateAsync(StockMovement entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(StockMovement entity, CancellationToken cancellationToken = default)
     {
         // StockMovement é APPEND-ONLY, mas mantemos o método para conformidade com a interface
         throw new InvalidOperationException("Stock movements cannot be updated. They are append-only.");
     }
 
-    public Task DeleteAsync(StockMovement entity, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         // StockMovement é APPEND-ONLY, não deve ser deletado
         throw new InvalidOperationException("Stock movements cannot be deleted. They are append-only for audit purposes.");

@@ -70,15 +70,18 @@ public class InventoryRepository : IInventoryRepository
         return entity;
     }
 
-    public Task<Inventory> UpdateAsync(Inventory entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Inventory entity, CancellationToken cancellationToken = default)
     {
         _context.Inventories.Update(entity);
-        return Task.FromResult(entity);
+        return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(Inventory entity, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _context.Inventories.Remove(entity);
-        return Task.CompletedTask;
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            _context.Inventories.Remove(entity);
+        }
     }
 }

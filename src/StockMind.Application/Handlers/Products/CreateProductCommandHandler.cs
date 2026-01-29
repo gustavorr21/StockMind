@@ -1,6 +1,7 @@
 using StockMind.Application.Commands.Products;
 using StockMind.Application.Common;
 using StockMind.Domain.Entities;
+using StockMind.Domain.Enums;
 using StockMind.Domain.Repositories;
 using StockMind.Domain.ValueObjects;
 
@@ -43,7 +44,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             var price = Money.Create(request.PriceAmount, request.PriceCurrency);
             var costPrice = Money.Create(request.CostPriceAmount, request.CostPriceCurrency);
 
-            // Create product
+            // Create product with new stock control fields
             var product = Product.Create(
                 request.Name,
                 request.Description,
@@ -51,7 +52,11 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
                 price,
                 costPrice,
                 request.CategoryId,
-                request.MinimumStock
+                UnitOfMeasure.Unit, // Default unit of measure
+                request.MinimumStock,
+                0, // Maximum stock (optional)
+                false, // Controls batch (default)
+                false  // Controls expiration (default)
             );
 
             if (!string.IsNullOrWhiteSpace(request.Barcode))

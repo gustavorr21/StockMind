@@ -52,15 +52,18 @@ public class WarehouseRepository : IWarehouseRepository
         return entity;
     }
 
-    public Task<Warehouse> UpdateAsync(Warehouse entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Warehouse entity, CancellationToken cancellationToken = default)
     {
         _context.Warehouses.Update(entity);
-        return Task.FromResult(entity);
+        return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(Warehouse entity, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _context.Warehouses.Remove(entity);
-        return Task.CompletedTask;
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            _context.Warehouses.Remove(entity);
+        }
     }
 }

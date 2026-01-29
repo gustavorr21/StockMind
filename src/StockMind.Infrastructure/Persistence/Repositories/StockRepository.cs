@@ -84,15 +84,18 @@ public class StockRepository : IStockRepository
         return entity;
     }
 
-    public Task<Stock> UpdateAsync(Stock entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Stock entity, CancellationToken cancellationToken = default)
     {
         _context.Stocks.Update(entity);
-        return Task.FromResult(entity);
+        return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(Stock entity, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _context.Stocks.Remove(entity);
-        return Task.CompletedTask;
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            _context.Stocks.Remove(entity);
+        }
     }
 }

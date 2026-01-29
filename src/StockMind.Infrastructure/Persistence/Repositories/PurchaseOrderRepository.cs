@@ -73,15 +73,18 @@ public class PurchaseOrderRepository : IPurchaseOrderRepository
         return entity;
     }
 
-    public Task<PurchaseOrder> UpdateAsync(PurchaseOrder entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(PurchaseOrder entity, CancellationToken cancellationToken = default)
     {
         _context.PurchaseOrders.Update(entity);
-        return Task.FromResult(entity);
+        return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(PurchaseOrder entity, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _context.PurchaseOrders.Remove(entity);
-        return Task.CompletedTask;
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            _context.PurchaseOrders.Remove(entity);
+        }
     }
 }

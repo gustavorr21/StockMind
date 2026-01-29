@@ -7,7 +7,7 @@ namespace StockMind.Domain.Events;
 /// Evento disparado quando há movimentação de estoque
 /// Usado para atualizar cache, notificar sistemas, gerar alertas
 /// </summary>
-public sealed record StockMovedEvent : DomainEvent
+public sealed record StockMovedEvent : IDomainEvent
 {
     public Guid MovementId { get; init; }
     public Guid ProductId { get; init; }
@@ -16,6 +16,7 @@ public sealed record StockMovedEvent : DomainEvent
     public MovementOrigin Origin { get; init; }
     public decimal Quantity { get; init; }
     public decimal NewBalance { get; init; }
+    public DateTime OccurredOn { get; init; }
 
     public StockMovedEvent(
         Guid movementId,
@@ -33,5 +34,6 @@ public sealed record StockMovedEvent : DomainEvent
         Origin = origin;
         Quantity = quantity;
         NewBalance = newBalance;
+        OccurredOn = DateTime.UtcNow;
     }
 }

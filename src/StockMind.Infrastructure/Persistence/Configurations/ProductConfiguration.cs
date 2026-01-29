@@ -38,11 +38,26 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.SupplierId);
 
+        builder.Property(p => p.ImageUrl)
+            .HasMaxLength(500);
+
+        // Novos campos do sistema de estoque profissional
+        builder.Property(p => p.UnitOfMeasure)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         builder.Property(p => p.MinimumStock)
             .IsRequired();
 
-        builder.Property(p => p.ImageUrl)
-            .HasMaxLength(500);
+        builder.Property(p => p.MaximumStock)
+            .IsRequired();
+
+        builder.Property(p => p.ControlsBatch)
+            .IsRequired();
+
+        builder.Property(p => p.ControlsExpiration)
+            .IsRequired();
 
         builder.Property(p => p.CreatedAt)
             .IsRequired();
@@ -79,14 +94,24 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         // Relationships
         builder.HasOne(p => p.Category)
-            .WithMany()
+            .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(p => p.Supplier)
-            .WithMany()
+            .WithMany(s => s.Products)
             .HasForeignKey(p => p.SupplierId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(p => p.Stocks)
+            .WithOne(s => s.Product)
+            .HasForeignKey(s => s.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(p => p.StockMovements)
+            .WithOne(sm => sm.Product)
+            .HasForeignKey(sm => sm.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Indexes
         builder.HasIndex(p => p.Sku).IsUnique();
