@@ -108,20 +108,19 @@ public class StockExitCommandHandler : ICommandHandler<StockExitCommand, Result<
             stock.RemoveQuantity(request.Quantity);
 
             _logger.LogInformation(
-                "?? Stock updated: ProductId={ProductId}, NewQuantity={NewQuantity}",
+                "Stock updated: ProductId={ProductId}, NewQuantity={NewQuantity}",
                 request.ProductId,
                 stock.CurrentQuantity);
 
-            // ?? CHECK FOR LOW STOCK ALERT
+            // Check for low stock alert
             await CheckAndCreateLowStockAlert(
                 product, 
                 warehouse, 
                 stock.CurrentQuantity, 
                 cancellationToken);
 
-            _logger.LogInformation("?? Saving changes to database...");
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("? Changes saved successfully");
+            _logger.LogInformation("Stock exit completed successfully. MovementId={MovementId}", movement.Id);
 
             return Result<Guid>.Success(movement.Id);
         }
@@ -143,18 +142,11 @@ public class StockExitCommandHandler : ICommandHandler<StockExitCommand, Result<
     {
         try
         {
-            _logger.LogInformation(
-                "?? CHECKING ALERT: Product={ProductName}, Current={Current}, Minimum={Minimum}, ProductId={ProductId}",
-                product.Name,
-                currentQuantity,
-                product.MinimumStock,
-                product.Id);
-
-            // Verifica se o estoque está abaixo do mínimo
+            // Check if stock is below minimum threshold
             if (currentQuantity >= product.MinimumStock)
             {
-                _logger.LogInformation(
-                    "? Stock level OK for product {ProductName} in warehouse {WarehouseName}. Current: {Current}, Minimum: {Minimum}",
+                _logger.LogDebug(
+                    "Stock level is adequate for product {ProductName} in warehouse {WarehouseName}. Current: {Current}, Minimum: {Minimum}",
                     product.Name,
                     warehouse.Name,
                     currentQuantity,
@@ -163,35 +155,32 @@ public class StockExitCommandHandler : ICommandHandler<StockExitCommand, Result<
             }
 
             _logger.LogWarning(
-                "?? LOW STOCK DETECTED for product {ProductName} ({ProductSku}) in warehouse {WarehouseName}. Current: {Current}, Minimum: {Minimum}",
+                "Low stock detected for product {ProductName} ({ProductSku}) in warehouse {WarehouseName}. Current: {Current}, Minimum: {Minimum}",
                 product.Name,
                 product.Sku,
                 warehouse.Name,
                 currentQuantity,
                 product.MinimumStock);
 
-            // Verifica se já existe um alerta ativo para este produto/depósito
+            // Check if an active alert already exists for this product/warehouse
             var existingAlert = await _stockAlertRepository.GetActiveAlertAsync(
                 product.Id,
                 warehouse.Id,
                 cancellationToken);
 
-            //if (existingAlert != null)
-            //{
-            //    // Atualiza a quantidade do alerta existente
-            //    existingAlert.UpdateQuantity(currentQuantity);
-            //    _logger.LogInformation(
-            //        "Updated existing alert for product {ProductName}. New quantity: {NewQuantity}",
-            //        product.Name,
-            //        currentQuantity);
-            //}
-            //else
-            //{
-                // Cria novo alerta
+            if (existingAlert != null)
+            {
+                // Update the quantity of the existing alert
+                existingAlert.UpdateQuantity(currentQuantity);
                 _logger.LogInformation(
-                    "?? Creating NEW alert for product {ProductId}",
-                    product.Id);
-
+                    "Updated existing alert for product {ProductName}. AlertId={AlertId}, NewQuantity={NewQuantity}",
+                    product.Name,
+                    existingAlert.Id,
+                    currentQuantity);
+            }
+            else
+            {
+                // Create new alert
                 var alert = StockAlert.Create(
                     product.Id,
                     product.Name,
@@ -201,20 +190,16 @@ public class StockExitCommandHandler : ICommandHandler<StockExitCommand, Result<
                     currentQuantity,
                     product.MinimumStock);
 
-                _logger.LogInformation(
-                    "?? Alert created in memory: AlertId={AlertId}, ProductId={ProductId}",
-                    alert.Id,
-                    alert.ProductId);
-
                 await _stockAlertRepository.AddAsync(alert, cancellationToken);
                 
                 _logger.LogInformation(
-                    "? Alert added to repository (pending SaveChanges): AlertId={AlertId}, ProductName={ProductName}",
+                    "Created new stock alert for product {ProductName}. AlertId={AlertId}, ProductId={ProductId}",
+                    product.Name,
                     alert.Id,
-                    product.Name);
-            //}
+                    alert.ProductId);
+            }
 
-            // Dispara evento para notificações assíncronas (RabbitMQ + SignalR)
+            // Publish event for asynchronous notifications (RabbitMQ + SignalR)
             var lowStockEvent = new LowStockDetectedEvent(
                 product.Id,
                 product.Name,
@@ -223,19 +208,19 @@ public class StockExitCommandHandler : ICommandHandler<StockExitCommand, Result<
                 warehouse.Name,
                 currentQuantity,
                 product.MinimumStock,
-                currentQuantity); // availableQuantity = currentQuantity
+                currentQuantity);
 
             await _mediator.Publish(lowStockEvent, cancellationToken);
             
             _logger.LogInformation(
-                "?? LowStockDetectedEvent published for product {ProductId}",
+                "LowStockDetectedEvent published for product {ProductId}",
                 product.Id);
         }
         catch (Exception ex)
         {
-            // Não propaga exceção para não quebrar o fluxo principal
+            // Log error but don't propagate to avoid breaking the main flow
             _logger.LogError(ex,
-                "? Error checking/creating low stock alert for product {ProductId}",
+                "Error checking/creating low stock alert for product {ProductId}",
                 product.Id);
         }
     }

@@ -1,0 +1,53 @@
+# fly.toml app configuration file generated for stockmind
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "stockmind"
+primary_region = "ams"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 1000
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[env]
+  ASPNETCORE_ENVIRONMENT = "Production"
+  ASPNETCORE_URLS = "http://+:8080"
+
+# Health check configuration
+[[services.http_checks]]
+  interval = "30s"
+  timeout = "10s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/health"
+  protocol = "http"
+
+# Optional: PostgreSQL database connection (uncomment and configure if using Fly Postgres)
+# [env]
+#   ConnectionStrings__DefaultConnection = "Host=your-postgres.internal;Database=stockmind;Username=postgres;Password=your-password"
+
+# Optional: Redis connection (uncomment if using Fly Redis)
+# [env]
+#   Redis__ConnectionString = "your-redis.internal:6379"
+
+# Optional: RabbitMQ connection (uncomment if using external RabbitMQ)
+# [env]
+#   RabbitMQ__HostName = "your-rabbitmq-host"
+#   RabbitMQ__UserName = "your-username"
+#   RabbitMQ__Password = "your-password"

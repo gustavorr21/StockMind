@@ -168,6 +168,12 @@ app.UseCors("AllowAll");
 app.UseAuthentication(); // Add this BEFORE UseAuthorization
 app.UseAuthorization();
 
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+    .WithName("HealthCheck")
+    .WithTags("Health")
+    .AllowAnonymous();
+
 app.MapControllers();
 
 // SignalR Hub
