@@ -56,6 +56,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+        
+        // Novos repositórios do sistema de estoque profissional
+        services.AddScoped<IWarehouseRepository, WarehouseRepository>();
+        services.AddScoped<IStockRepository, StockRepository>();
+        services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
 
         // Authentication Services
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
