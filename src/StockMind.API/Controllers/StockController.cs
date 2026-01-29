@@ -19,6 +19,48 @@ public class StockController : BaseController
     }
 
     /// <summary>
+    /// Get stock items with advanced filters, pagination and sorting
+    /// </summary>
+    [HttpGet]
+    [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
+    public async Task<IActionResult> GetStockItems(
+        [FromQuery] string? searchTerm,
+        [FromQuery] Guid? productId,
+        [FromQuery] Guid? categoryId,
+        [FromQuery] Guid? warehouseId,
+        [FromQuery] string? status,
+        [FromQuery] bool? onlyLowStock,
+        [FromQuery] bool? onlyCritical,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = "asc")
+    {
+        var searchParams = new Application.DTOs.Stock.StockSearchParams
+        {
+            SearchTerm = searchTerm,
+            ProductId = productId,
+            CategoryId = categoryId,
+            WarehouseId = warehouseId,
+            Status = status,
+            OnlyLowStock = onlyLowStock,
+            OnlyCritical = onlyCritical,
+            Page = page,
+            PageSize = pageSize,
+            SortBy = sortBy,
+            SortOrder = sortOrder
+        };
+
+        var query = new GetStockItemsQuery(searchParams);
+        var result = await _mediator.Send(query);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
     /// Get stock position by product and/or warehouse
     /// </summary>
     [HttpGet("position")]
