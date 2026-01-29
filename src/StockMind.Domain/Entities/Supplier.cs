@@ -14,6 +14,10 @@ public sealed class Supplier : BaseEntity
     public Address Address { get; private set; }
     public SupplierStatus Status { get; private set; }
     public string? Notes { get; private set; }
+    
+    // Navigation properties
+    public ICollection<Product> Products { get; private set; } = new List<Product>();
+    public ICollection<PurchaseOrder> PurchaseOrders { get; private set; } = new List<PurchaseOrder>();
 
     // EF Core constructor
     private Supplier()
