@@ -140,6 +140,7 @@ using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
         await DataSeeder.SeedAsync(services);
+        await StockSystemSeeder.SeedStockSystemAsync(services);
         Log.Information("Database seeded successfully");
     }
     catch (Exception ex)
