@@ -18,6 +18,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<StockItem> StockItems => Set<StockItem>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    
+    // Novas entidades do sistema de estoque profissional
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<Stock> Stocks => Set<Stock>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
+    public DbSet<PurchaseEntry> PurchaseEntries => Set<PurchaseEntry>();
+    public DbSet<Inventory> Inventories => Set<Inventory>();
+    public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
