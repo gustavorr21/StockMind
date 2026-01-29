@@ -156,7 +156,9 @@ public class StockMovementRepository : IStockMovementRepository
 
         if (endDate.HasValue)
         {
-            query = query.Where(sm => sm.MovementDate <= endDate.Value);
+            var endDateExclusive = endDate.Value.Date.AddDays(1);
+
+            query = query.Where(sm => sm.MovementDate <= endDateExclusive);
         }
 
         // Filtro por tipo

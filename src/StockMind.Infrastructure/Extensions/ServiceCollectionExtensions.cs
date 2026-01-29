@@ -65,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockRepository, StockRepository>();
         services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
         services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<IStockAlertRepository, StockAlertRepository>();
 
         // Authentication Services
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
@@ -74,6 +75,12 @@ public static class ServiceCollectionExtensions
 
         // File Storage Service
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        
+        // Email Service
+        services.AddScoped<IEmailService, EmailService>();
+        
+        // Event Publisher (Dummy implementation - substituir por RabbitMQ em produção)
+        services.AddScoped<IEventPublisher, DummyEventPublisher>();
 
         // Redis Cache (optional - will fail gracefully if not available)
         try

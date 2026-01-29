@@ -99,6 +99,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// SignalR
+builder.Services.AddSignalR();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -132,6 +135,9 @@ app.UseAuthentication(); // Add this BEFORE UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();
+
+// SignalR Hub
+app.MapHub<StockMind.API.Hubs.StockAlertHub>("/hubs/stock-alerts");
 
 // Seed database with roles and admin user
 using (var scope = app.Services.CreateScope())
