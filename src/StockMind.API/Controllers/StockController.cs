@@ -75,11 +75,11 @@ public class StockController : BaseController
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error });
 
-        return Ok(result.Data);
+        return Ok(result.Data.FirstOrDefault());
     }
 
     /// <summary>
-    /// Get stock movement history
+    /// Get stock movement history with pagination and filters
     /// </summary>
     [HttpGet("movements")]
     [Authorize(Roles = "Admin,Manager,Operator,Viewer")]
@@ -87,9 +87,29 @@ public class StockController : BaseController
         [FromQuery] Guid? productId,
         [FromQuery] Guid? warehouseId,
         [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate)
+        [FromQuery] DateTime? endDate,
+        [FromQuery] string? type,
+        [FromQuery] string? origin,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = "desc")
     {
-        var query = new GetStockMovementHistoryQuery(productId, warehouseId, startDate, endDate);
+        var searchParams = new Application.DTOs.Stock.MovementSearchParams
+        {
+            ProductId = productId,
+            WarehouseId = warehouseId,
+            StartDate = startDate,
+            EndDate = endDate,
+            Type = type,
+            Origin = origin,
+            Page = page,
+            PageSize = pageSize,
+            SortBy = sortBy,
+            SortOrder = sortOrder
+        };
+
+        var query = new GetStockMovementsQuery(searchParams);
         var result = await _mediator.Send(query);
 
         if (!result.IsSuccess)

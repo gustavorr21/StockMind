@@ -83,13 +83,6 @@ public sealed class StockMovement : AggregateRoot
     {
         ValidateBasicParameters(productId, warehouseId, quantity, userId);
 
-        if (origin != MovementOrigin.Purchase && 
-            origin != MovementOrigin.Return && 
-            origin != MovementOrigin.ManualAdjustment)
-        {
-            throw new ArgumentException("Invalid origin for entry movement", nameof(origin));
-        }
-
         return new StockMovement(
             productId,
             warehouseId,
@@ -114,13 +107,6 @@ public sealed class StockMovement : AggregateRoot
         string? observation = null)
     {
         ValidateBasicParameters(productId, warehouseId, quantity, userId);
-
-        if (origin != MovementOrigin.Sale && 
-            origin != MovementOrigin.Loss && 
-            origin != MovementOrigin.ManualAdjustment)
-        {
-            throw new ArgumentException("Invalid origin for exit movement", nameof(origin));
-        }
 
         // Valida se há saldo suficiente
         var newBalance = previousBalance - quantity;

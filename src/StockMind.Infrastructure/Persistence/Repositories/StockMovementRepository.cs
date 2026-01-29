@@ -59,10 +59,13 @@ public class StockMovementRepository : IStockMovementRepository
 
     public async Task<IEnumerable<StockMovement>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
+        var endDateFinal = endDate.Date.AddDays(1).AddTicks(-1);
+
         return await _context.StockMovements
             .Include(sm => sm.Product)
             .Include(sm => sm.Warehouse)
-            .Where(sm => sm.MovementDate >= startDate && sm.MovementDate <= endDate)
+            .Where(sm => sm.MovementDate >= startDate
+                      && sm.MovementDate <= endDateFinal)
             .OrderByDescending(sm => sm.MovementDate)
             .ToListAsync(cancellationToken);
     }
@@ -113,5 +116,105 @@ public class StockMovementRepository : IStockMovementRepository
     {
         // StockMovement é APPEND-ONLY, não deve ser deletado
         throw new InvalidOperationException("Stock movements cannot be deleted. They are append-only for audit purposes.");
+    }
+
+    public async Task<(IEnumerable<StockMovement> Items, int TotalCount)> GetMovementsAsync(
+        Guid? productId,
+        Guid? warehouseId,
+        DateTime? startDate,
+        DateTime? endDate,
+        string? type,
+        string? origin,
+        int skip,
+        int take,
+        string? sortBy,
+        bool isDescending,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.StockMovements
+            .Include(sm => sm.Product)
+            .Include(sm => sm.Warehouse)
+            .AsQueryable();
+
+        // Filtro por produto
+        if (productId.HasValue)
+        {
+            query = query.Where(sm => sm.ProductId == productId.Value);
+        }
+
+        // Filtro por depósito
+        if (warehouseId.HasValue)
+        {
+            query = query.Where(sm => sm.WarehouseId == warehouseId.Value);
+        }
+
+        // Filtro por período
+        if (startDate.HasValue)
+        {
+            query = query.Where(sm => sm.MovementDate >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(sm => sm.MovementDate <= endDate.Value);
+        }
+
+        // Filtro por tipo
+        if (!string.IsNullOrWhiteSpace(type) && Enum.TryParse<MovementType>(type, out var movementType))
+        {
+            query = query.Where(sm => sm.Type == movementType);
+        }
+
+        // Filtro por origem
+        if (!string.IsNullOrWhiteSpace(origin) && Enum.TryParse<MovementOrigin>(origin, out var movementOrigin))
+        {
+            query = query.Where(sm => sm.Origin == movementOrigin);
+        }
+
+        // Contagem total
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Ordenação
+        query = ApplySorting(query, sortBy, isDescending);
+
+        // Paginação
+        var items = await query
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    private IQueryable<StockMovement> ApplySorting(IQueryable<StockMovement> query, string? sortBy, bool isDescending)
+    {
+        return sortBy?.ToLower() switch
+        {
+            "productname" => isDescending
+                ? query.OrderByDescending(sm => sm.Product.Name)
+                : query.OrderBy(sm => sm.Product.Name),
+
+            "warehouse" => isDescending
+                ? query.OrderByDescending(sm => sm.Warehouse.Name)
+                : query.OrderBy(sm => sm.Warehouse.Name),
+
+            "type" => isDescending
+                ? query.OrderByDescending(sm => sm.Type)
+                : query.OrderBy(sm => sm.Type),
+
+            "origin" => isDescending
+                ? query.OrderByDescending(sm => sm.Origin)
+                : query.OrderBy(sm => sm.Origin),
+
+            "quantity" => isDescending
+                ? query.OrderByDescending(sm => sm.Quantity)
+                : query.OrderBy(sm => sm.Quantity),
+
+            "movementdate" => isDescending
+                ? query.OrderByDescending(sm => sm.MovementDate)
+                : query.OrderBy(sm => sm.MovementDate),
+
+            _ => query.OrderByDescending(sm => sm.MovementDate) // Default: mais recentes primeiro
+        };
     }
 }
