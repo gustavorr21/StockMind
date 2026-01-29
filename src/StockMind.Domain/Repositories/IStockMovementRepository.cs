@@ -6,6 +6,10 @@ namespace StockMind.Domain.Repositories;
 public interface IStockMovementRepository : IRepository<StockMovement>
 {
     Task<IEnumerable<StockMovement>> GetByProductIdAsync(Guid productId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<StockMovement>> GetByMovementTypeAsync(StockMovementType movementType, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StockMovement>> GetByWarehouseIdAsync(Guid warehouseId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StockMovement>> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, CancellationToken cancellationToken = default);
     Task<IEnumerable<StockMovement>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StockMovement>> GetByTypeAsync(MovementType type, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StockMovement>> GetByOriginAsync(MovementOrigin origin, CancellationToken cancellationToken = default);
+    Task<decimal> GetCurrentBalanceAsync(Guid productId, Guid warehouseId, CancellationToken cancellationToken = default);
 }
