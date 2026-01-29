@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using StackExchange.Redis;
 using StockMind.Application.Interfaces;
@@ -79,8 +80,38 @@ public static class ServiceCollectionExtensions
         // Email Service
         services.AddScoped<IEmailService, EmailService>();
         
-        // Event Publisher (Dummy implementation - substituir por RabbitMQ em produção)
-        services.AddScoped<IEventPublisher, DummyEventPublisher>();
+        // Event Publisher - RabbitMQ ou Dummy como fallback
+        var rabbitMqHost = configuration["RabbitMQ:HostName"];
+        if (!string.IsNullOrEmpty(rabbitMqHost))
+        {
+            try
+            {
+                // Registrar RabbitMQEventPublisher como IEventPublisher
+                services.AddScoped<IEventPublisher>(sp => 
+                    new RabbitMQEventPublisher(
+                        rabbitMqHost, 
+                        sp.GetRequiredService<ILogger<RabbitMQEventPublisher>>()));
+                
+                // Registrar RabbitMQ Consumer Service como Hosted Service
+                services.AddHostedService(sp => 
+                    new RabbitMQConsumerService(
+                        sp.GetRequiredService<ILogger<RabbitMQConsumerService>>(),
+                        sp,
+                        rabbitMqHost));
+                
+                Console.WriteLine("? RabbitMQ Event Publisher and Consumer configured successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"?? Failed to configure RabbitMQ: {ex.Message}. Using DummyEventPublisher.");
+                services.AddScoped<IEventPublisher, DummyEventPublisher>();
+            }
+        }
+        else
+        {
+            Console.WriteLine("?? RabbitMQ:HostName not configured. Using DummyEventPublisher.");
+            services.AddScoped<IEventPublisher, DummyEventPublisher>();
+        }
 
         // Redis Cache (optional - will fail gracefully if not available)
         try
@@ -96,20 +127,6 @@ public static class ServiceCollectionExtensions
         catch
         {
             // Redis not configured, skip
-        }
-
-        // RabbitMQ Event Bus (optional - will fail gracefully if not available)
-        try
-        {
-            var rabbitMqHost = configuration["RabbitMQ:HostName"];
-            if (!string.IsNullOrEmpty(rabbitMqHost))
-            {
-                services.AddSingleton<IEventBus>(sp => new RabbitMQEventBus(rabbitMqHost));
-            }
-        }
-        catch
-        {
-            // RabbitMQ not configured, skip
         }
 
         return services;

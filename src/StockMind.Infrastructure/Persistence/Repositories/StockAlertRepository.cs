@@ -72,6 +72,40 @@ public class StockAlertRepository : IStockAlertRepository
             .CountAsync(a => a.Status == AlertStatus.Active, cancellationToken);
     }
 
+    public async Task<List<StockAlert>> GetFilteredAlertsAsync(
+        AlertStatus? status = null,
+        Guid? productId = null,
+        Guid? warehouseId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.StockAlerts
+            .Include(a => a.Product)
+            .Include(a => a.Warehouse)
+            .AsQueryable();
+
+        // Apply filters
+        if (status.HasValue)
+            query = query.Where(a => a.Status == status.Value);
+
+        if (productId.HasValue)
+            query = query.Where(a => a.ProductId == productId.Value);
+
+        if (warehouseId.HasValue)
+            query = query.Where(a => a.WarehouseId == warehouseId.Value);
+
+        if (startDate.HasValue)
+            query = query.Where(a => a.FirstDetectedAt >= startDate.Value);
+
+        if (endDate.HasValue)
+            query = query.Where(a => a.FirstDetectedAt <= endDate.Value);
+
+        return await query
+            .OrderByDescending(a => a.FirstDetectedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<StockAlert> AddAsync(StockAlert entity, CancellationToken cancellationToken = default)
     {
         await _context.StockAlerts.AddAsync(entity, cancellationToken);

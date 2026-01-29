@@ -19,4 +19,12 @@ public interface IStockAlertRepository : IRepository<StockAlert>
     
     Task<int> GetActiveAlertsCountAsync(
         CancellationToken cancellationToken = default);
+    
+    Task<List<StockAlert>> GetFilteredAlertsAsync(
+        AlertStatus? status = null,
+        Guid? productId = null,
+        Guid? warehouseId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default);
 }

@@ -95,6 +95,24 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!))
     };
+    
+    // Configure JWT for SignalR (WebSocket)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            
+            // If the request is for SignalR hub
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -102,14 +120,30 @@ builder.Services.AddAuthorization();
 // SignalR
 builder.Services.AddSignalR();
 
-// Add CORS
+// SignalR Notifier Service
+builder.Services.AddScoped<StockMind.Application.Interfaces.ISignalRNotifier, StockMind.API.Services.SignalRNotifier>();
+
+// Add CORS (SignalR requires credentials support)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        if (builder.Environment.IsDevelopment())
+        {
+            // Em desenvolvimento, permite qualquer origem (para testar HTML local)
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials(); // Required for SignalR
+        }
+        else
+        {
+            // Em produção, especifica origins permitidas
+            policy.WithOrigins("http://localhost:3000", "http://localhost:4200", "https://localhost:3000", "https://localhost:4200")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
