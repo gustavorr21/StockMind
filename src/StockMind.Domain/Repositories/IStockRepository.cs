@@ -10,4 +10,19 @@ public interface IStockRepository : IRepository<Stock>
     Task<IEnumerable<Stock>> GetLowStockProductsAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<Stock>> GetOutOfStockProductsAsync(CancellationToken cancellationToken = default);
     Task<decimal> GetTotalStockByProductAsync(Guid productId, CancellationToken cancellationToken = default);
+    
+    // Novo método para consulta paginada com filtros
+    Task<(IEnumerable<Stock> Items, int TotalCount)> GetStockItemsAsync(
+        string? searchTerm,
+        Guid? productId,
+        Guid? categoryId,
+        Guid? warehouseId,
+        string? status,
+        bool? onlyLowStock,
+        bool? onlyCritical,
+        int skip,
+        int take,
+        string? sortBy,
+        bool isDescending,
+        CancellationToken cancellationToken = default);
 }
