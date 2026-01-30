@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "StockMind - Stock Alerts API",
+    "description": "Coleção de testes para a API de Alertas de Estoque",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@stockmind.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "https://localhost:7000/api/auth/login",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stock Alerts",
+      "item": [
+        {
+          "name": "Get All Alerts (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Active Alerts Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?status=Active&page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Active"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Acknowledged Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?status=Acknowledged&page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Acknowledged"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts by Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?productId={{productId}}&page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts by Warehouse",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?warehouseId={{warehouseId}}&page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "warehouseId",
+                  "value": "{{warehouseId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alerts by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts?startDate=2024-01-01&endDate=2024-12-31&page=1&pageSize=10",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Active Alerts (Legacy Endpoint)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts/active",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts", "active"]
+            }
+          }
+        },
+        {
+          "name": "Acknowledge Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Pedido de compra #1234 criado para reposição\"\n}"
+            },
+            "url": {
+              "raw": "https://localhost:7000/api/stock-alerts/{{alertId}}/acknowledge",
+              "protocol": "https",
+              "host": ["localhost"],
+              "port": "7000",
+              "path": ["api", "stock-alerts", "{{alertId}}", "acknowledge"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "warehouseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "alertId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockMind - SignalR Test Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .disconnect-btn {
+            background: #dc3545;
+        }
+        .disconnect-btn:hover {
+            background: #c82333;
+        }
+        .alerts {
+            margin-top: 30px;
+        }
+        .alert-item {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            animation: slideIn 0.3s ease-in;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .alert-item.critical {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .alert-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .alert-details {
+            color: #666;
+            font-size: 14px;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .logs {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid #333;
+        }
+        .log-info { color: #4ec9b0; }
+        .log-success { color: #7fcd91; }
+        .log-error { color: #f48771; }
+        .log-warning { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? StockMind - SignalR Test Client</h1>
+        
+        <div id="status" class="status disconnected">
+            ? Desconectado
+        </div>
+
+        <div class="input-group">
+            <label for="apiUrl">?? API URL:</label>
+            <input type="text" id="apiUrl" value="https://localhost:49469" placeholder="https://localhost:49469">
+        </div>
+
+        <div class="input-group">
+            <label for="token">?? JWT Token (Bearer):</label>
+            <input type="text" id="token" placeholder="Cole seu token JWT aqui (obtido do Swagger /api/auth/login)">
+        </div>
+
+        <div>
+            <button id="connectBtn" onclick="connect()">?? Conectar SignalR</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled class="disconnect-btn">?? Desconectar</button>
+        </div>
+
+        <div class="alerts">
+            <h2>?? Alertas Recebidos:</h2>
+            <div id="alertsContainer">
+                <p style="color: #999; font-style: italic;">Nenhum alerta recebido ainda...</p>
+            </div>
+        </div>
+
+        <div class="logs">
+            <strong>?? Logs de Conexão:</strong>
+            <div id="logsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let connection = null;
+        let alertCount = 0;
+
+        function log(message, type = 'info') {
+            const logsContainer = document.getElementById('logsContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsContainer.appendChild(entry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function updateStatus(status, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = message;
+        }
+
+        async function connect() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const token = document.getElementById('token').value;
+
+            if (!token) {
+                alert('?? Por favor, insira o JWT Token!');
+                log('Erro: Token não fornecido', 'error');
+                return;
+            }
+
+            try {
+                updateStatus('connecting', '? Conectando...');
+                log('Iniciando conexão com SignalR...', 'info');
+
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(`${apiUrl}/hubs/stock-alerts`, {
+                        accessTokenFactory: () => token
+                    })
+                    .withAutomaticReconnect()
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                // Evento: Connected
+                connection.on("Connected", (connectionId) => {
+                    log(`? Conectado com sucesso! Connection ID: ${connectionId}`, 'success');
+                    updateStatus('connected', `? Conectado (ID: ${connectionId})`);
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = false;
+                });
+
+                // Evento: LowStockAlert
+                connection.on("LowStockAlert", (alert) => {
+                    alertCount++;
+                    log(`?? Alerta recebido: ${alert.productName} - Estoque: ${alert.currentQuantity}/${alert.minimumQuantity}`, 'warning');
+                    displayAlert(alert);
+                    playNotificationSound();
+                });
+
+                // Evento: Reconexão
+                connection.onreconnecting((error) => {
+                    log(`?? Reconectando... Erro: ${error}`, 'warning');
+                    updateStatus('connecting', '? Reconectando...');
+                });
+
+                connection.onreconnected((connectionId) => {
+                    log(`? Reconectado! Connection ID: ${connectionId}`, 'success');
+                    updateStatus('connected', `? Reconectado (ID: ${connectionId})`);
+                });
+
+                connection.onclose((error) => {
+                    log(`? Conexão fechada. Erro: ${error || 'Nenhum erro'}`, 'error');
+                    updateStatus('disconnected', '? Desconectado');
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                });
+
+                await connection.start();
+                log('?? Conexão estabelecida com sucesso!', 'success');
+
+            } catch (error) {
+                log(`? Erro ao conectar: ${error.message}`, 'error');
+                updateStatus('disconnected', `? Erro: ${error.message}`);
+                alert(`Erro ao conectar: ${error.message}`);
+            }
+        }
+
+        async function disconnect() {
+            if (connection) {
+                try {
+                    await connection.stop();
+                    log('?? Desconectado manualmente', 'info');
+                } catch (error) {
+                    log(`? Erro ao desconectar: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function displayAlert(alert) {
+            const container = document.getElementById('alertsContainer');
+            
+            // Remove mensagem inicial
+            if (alertCount === 1) {
+                container.innerHTML = '';
+            }
+
+            const alertDiv = document.createElement('div');
+            const isCritical = alert.currentQuantity < (alert.minimumQuantity * 0.5);
+            alertDiv.className = `alert-item ${isCritical ? 'critical' : ''}`;
+            
+            alertDiv.innerHTML = `
+                <div class="alert-header">
+                    ${isCritical ? '??' : '??'} ${alert.productName} (${alert.productSku})
+                </div>
+                <div class="alert-details">
+                    ?? <strong>Depósito:</strong> ${alert.warehouseName}<br>
+                    ?? <strong>Estoque Atual:</strong> ${alert.currentQuantity} unidades<br>
+                    ?? <strong>Estoque Mínimo:</strong> ${alert.minimumQuantity} unidades<br>
+                    ?? <strong>Déficit:</strong> ${alert.minimumQuantity - alert.currentQuantity} unidades
+                </div>
+                <div class="timestamp">
+                    ?? ${new Date(alert.timestamp).toLocaleString('pt-BR')}
+                </div>
+            `;
+            
+            container.insertBefore(alertDiv, container.firstChild);
+        }
+
+        function playNotificationSound() {
+            // Toca som de notificação (navegadores modernos)
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoUXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+Dyvm0hBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFApGn+DyvmwhBzSN1/LOfSwGJHTF8N+RQAoVXrPp65lWFA==');
+            audio.play().catch(e => console.log('Erro ao tocar som:', e));
+        }
+
+        // Auto-connect se token já estiver preenchido
+        window.onload = () => {
+            log('? Página carregada. Pronto para conectar!', 'success');
+            log('?? Instruções:', 'info');
+            log('1. Obtenha o token em: POST /api/auth/login', 'info');
+            log('2. Cole o token no campo acima', 'info');
+            log('3. Clique em "Conectar SignalR"', 'info');
+            log('4. Crie uma saída de estoque para testar', 'info');
+        };
+    </script>
+</body>
+</html>
